@@ -1,13 +1,22 @@
 #!/bin/bash
+PATTERN=""
+DIR1=""
+DIR2=""
+SIZ1=""
+SIZ2=""
+VERSION="`basename $0` ver. 0.1\n"
+USAGE="Copyright: Copyright (C) 2014 honghua.zhh@alibaba-inc.com
+Usage: $(basename $0) [OPTION]... PATTERN [DIR1] [DIR2] ... 
+Example: $(basename $0) -ext dcompare -ext \".*\.\(php\|conf\)\" /home/admin/dir1 /home/admin/dir2
+The cycle start based on the file in DIR1!
+sometips for pattern:
+  -pattern             it supports regular expression.
+  -pattern             examples: \"*.\.php\" or \".*\.\(php\|conf\)\"
+"
 function dirCompare()
 {
-    PATTERN=${1}
-    DIR1=${2}
-    DIR2=${3}
-    SZ1=${#DIR1}
-    SZ2=${#DIR2}
     for file1 in $(find $DIR1 -type f -regex "${PATTERN}"); do
-        FILE=${file1:$SZ1}
+        FILE=${file1:$SIZ1}
         file2=${DIR2}$FILE
         hash1=$(md5sum $file1 | awk '{print $1}')
         hash2=0
@@ -17,32 +26,16 @@ function dirCompare()
         fi
     done
 }
-VERSION="`basename $0` ver. 0.1\n"
-COPYRIGHT="Copyright: Copyright (C) 2014 honghua.zhh@alibaba-inc.com \n"
-USAGE="Usage: $(basename $0) [OPTION]... PATTERN [DIR1] [DIR2] ... \n"
-EXAPLE="Example: $(basename $0) -ext dcompare -ext \".*\.\(php\|conf\)\" /home/admin/dir1 /home/admin/dir2\n"
-TIPS="The cycle start based on the file in DIR1!\n"
-DETAIL="\nsometips for pattern:
-  -pattern             it only supports ',', not regular expression.
-  -pattern             examples: php|conf or php
-"
 
 if [ $# -eq 0 ]; then
     echo -ne "${USAGE}" >&2
-    echo -ne "${EXAPLE}" >&2
-    echo -ne "${TIPS}" >&2
-    echo -ne "${DETAIL}" >&2
     exit 1
 fi
 
-cd /
 while [ $# -gt 0 ]; do
     case "${1}" in
         --help | -h | --h* )
             echo -ne "${USAGE}" >&2
-            echo -ne "${EXAPLE}" >&2
-            echo -ne "${TIPS}" >&2
-            echo -ne "${DETAIL}" >&2
             exit 0
             ;;
         --version | -V | -v | -version | -Version)
@@ -83,4 +76,6 @@ while [ $# -gt 0 ]; do
     esac
 done
 
+SIZ1=${#DIR1}
+SIZ2=${#DIR2}
 dirCompare "$PATTERN" "$DIR1" "$DIR2"
