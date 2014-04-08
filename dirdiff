@@ -1,0 +1,86 @@
+#!/bin/bash
+function dirCompare()
+{
+    PATTERN=${1}
+    DIR1=${2}
+    DIR2=${3}
+    SZ1=${#DIR1}
+    SZ2=${#DIR2}
+    for file1 in $(find $DIR1 -type f -regex "${PATTERN}"); do
+        FILE=${file1:$SZ1}
+        file2=${DIR2}$FILE
+        hash1=$(md5sum $file1 | awk '{print $1}')
+        hash2=0
+        test -f $file2 && hash2=$(md5sum $file2 | awk '{print $1}')
+        if [ "$hash1" != "$hash2" ]; then
+            echo -ne "${file1} ${DIR2}${FILE}\n"
+        fi
+    done
+}
+VERSION="`basename $0` ver. 0.1\n"
+COPYRIGHT="Copyright: Copyright (C) 2014 honghua.zhh@alibaba-inc.com \n"
+USAGE="Usage: $(basename $0) [OPTION]... PATTERN [DIR1] [DIR2] ... \n"
+EXAPLE="Example: $(basename $0) -ext dcompare -ext \".*\.\(php\|conf\)\" /home/admin/dir1 /home/admin/dir2\n"
+TIPS="The cycle start based on the file in DIR1!\n"
+DETAIL="\nsometips for pattern:
+  -pattern             it only supports ',', not regular expression.
+  -pattern             examples: php|conf or php
+"
+
+if [ $# -eq 0 ]; then
+    echo -ne "${USAGE}" >&2
+    echo -ne "${EXAPLE}" >&2
+    echo -ne "${TIPS}" >&2
+    echo -ne "${DETAIL}" >&2
+    exit 1
+fi
+
+cd /
+while [ $# -gt 0 ]; do
+    case "${1}" in
+        --help | -h | --h* )
+            echo -ne "${USAGE}" >&2
+            echo -ne "${EXAPLE}" >&2
+            echo -ne "${TIPS}" >&2
+            echo -ne "${DETAIL}" >&2
+            exit 0
+            ;;
+        --version | -V | -v | -version | -Version)
+            echo -ne "${VERSION}" >&2
+            exit 0
+            ;;
+        -ext)
+            PATTERN=${2}
+            shift 2
+            ;;
+        *)
+            if [ -z $PATTERN ]; then
+                PATTERN=".*"
+            fi
+            if [ $# -eq 1 ]; then
+                if [ ! -d "${1}" ]; then 
+                    echo -ne "dir ${1} is not exist!"
+                    exit 1
+                fi 
+                DIR1=$PWD
+                DIR2=${1}
+            elif [ $# -eq 2 ]; then
+                if [ ! -d "${1}" ]; then 
+                    echo -ne "dir ${1} is not exist!"
+                    exit 1
+                fi 
+                if [ ! -d "${2}" ]; then
+                    echo -ne "dir ${2} is not exist!"
+                    exit 1
+                fi
+                DIR1=${1}
+                DIR2=${2}
+            else
+                echo "sorry that current vesion only support two files' compare!"
+                exit 1
+            fi
+            break
+    esac
+done
+
+dirCompare "$PATTERN" "$DIR1" "$DIR2"
